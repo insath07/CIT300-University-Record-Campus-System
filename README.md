@@ -833,4 +833,4 @@ The final integrated system provides a clear practical demonstration of the grou
 
 **CIT300 – Data Structures and Algorithms**
 
----
+Final integration is maintained by Team Leader S.M. Insath.
