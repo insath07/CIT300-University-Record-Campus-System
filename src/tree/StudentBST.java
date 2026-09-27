@@ -92,6 +92,31 @@ public class StudentBST {
         return null;
     }
 
+    // Delete student by ID while preserving BST ordering.
+    public boolean delete(String studentId) {
+        if (searchStudent(studentId) == null) {
+            return false;
+        }
+        root = deleteRecursive(root, studentId);
+        return true;
+    }
+
+    private Node deleteRecursive(Node current, String studentId) {
+        if (current == null) return null;
+        int comparison = studentId.compareToIgnoreCase(current.student.getStudentId());
+        if (comparison < 0) current.left = deleteRecursive(current.left, studentId);
+        else if (comparison > 0) current.right = deleteRecursive(current.right, studentId);
+        else {
+            if (current.left == null) return current.right;
+            if (current.right == null) return current.left;
+            Node successor = current.right;
+            while (successor.left != null) successor = successor.left;
+            current.student = successor.student;
+            current.right = deleteRecursive(current.right, successor.student.getStudentId());
+        }
+        return current;
+    }
+
     // Inorder Traversal
     public void inorder() {
 
