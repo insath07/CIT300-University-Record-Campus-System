@@ -21,23 +21,31 @@ public class CampusGraph {
     }
 
     // Add a campus location
-    public void addLocation(String location) {
-
-        if (!adjacencyList.containsKey(location)) {
-            adjacencyList.put(location, new ArrayList<>());
-            System.out.println("Location added: " + location);
+    public boolean addLocation(String location) {
+        if (matchingLocation(location) != null) {
+            System.out.println("Location already exists.");
+            return false;
         }
+        adjacencyList.put(location, new ArrayList<>());
+        System.out.println("Location added: " + location);
+        return true;
     }
 
     // Add an undirected route
-    public void addRoute(String location1, String location2, int distance) {
-
-        if (!adjacencyList.containsKey(location1)) {
-            addLocation(location1);
+    public boolean addRoute(String location1, String location2, int distance) {
+        if (location1.equalsIgnoreCase(location2) || distance <= 0) {
+            System.out.println("A connection needs two different locations and a positive distance.");
+            return false;
         }
-
-        if (!adjacencyList.containsKey(location2)) {
-            addLocation(location2);
+        location1 = matchingLocation(location1);
+        location2 = matchingLocation(location2);
+        if (location1 == null || location2 == null) {
+            System.out.println("Both locations must be added before creating a connection.");
+            return false;
+        }
+        if (hasRoute(location1, location2)) {
+            System.out.println("Connection already exists.");
+            return false;
         }
 
         adjacencyList.get(location1)
@@ -51,6 +59,49 @@ public class CampusGraph {
                 + " <-> " + location2
                 + " (" + distance + " m)"
         );
+        return true;
+    }
+
+    public boolean removeLocation(String location) {
+        location = matchingLocation(location);
+        if (location == null) {
+            System.out.println("Location not found.");
+            return false;
+        }
+        adjacencyList.remove(location);
+        final String locationToRemove = location;
+        for (List<Edge> edges : adjacencyList.values()) {
+            edges.removeIf(edge -> edge.destination.equalsIgnoreCase(locationToRemove));
+        }
+        System.out.println("Location and its connections removed: " + location);
+        return true;
+    }
+
+    public boolean removeRoute(String location1, String location2) {
+        location1 = matchingLocation(location1);
+        location2 = matchingLocation(location2);
+        if (location1 == null || location2 == null) {
+            System.out.println("Location not found.");
+            return false;
+        }
+        final String firstLocation = location1;
+        final String secondLocation = location2;
+        boolean removed = adjacencyList.get(firstLocation)
+                .removeIf(edge -> edge.destination.equalsIgnoreCase(secondLocation));
+        adjacencyList.get(secondLocation).removeIf(edge -> edge.destination.equalsIgnoreCase(firstLocation));
+        if (!removed) {
+            System.out.println("Connection not found.");
+            return false;
+        }
+        System.out.println("Connection removed: " + location1 + " <-> " + location2);
+        return true;
+    }
+
+    private boolean hasRoute(String location1, String location2) {
+        for (Edge edge : adjacencyList.get(location1)) {
+            if (edge.destination.equalsIgnoreCase(location2)) return true;
+        }
+        return false;
     }
 
     // Display graph
@@ -82,8 +133,8 @@ public class CampusGraph {
 
     // Breadth First Search
     public void bfs(String start) {
-
-        if (!adjacencyList.containsKey(start)) {
+        start = matchingLocation(start);
+        if (start == null) {
             System.out.println("Starting location not found.");
             return;
         }
@@ -118,8 +169,8 @@ public class CampusGraph {
 
     // Depth First Search
     public void dfs(String start) {
-
-        if (!adjacencyList.containsKey(start)) {
+        start = matchingLocation(start);
+        if (start == null) {
             System.out.println("Starting location not found.");
             return;
         }
@@ -153,9 +204,9 @@ public class CampusGraph {
 
     // Dijkstra's shortest path
     public void shortestPath(String start, String destination) {
-
-        if (!adjacencyList.containsKey(start)
-                || !adjacencyList.containsKey(destination)) {
+        start = matchingLocation(start);
+        destination = matchingLocation(destination);
+        if (start == null || destination == null) {
 
             System.out.println("Location not found.");
             return;
@@ -240,7 +291,14 @@ public class CampusGraph {
     }
 
     public boolean containsLocation(String location) {
-        return adjacencyList.containsKey(location);
+        return matchingLocation(location) != null;
+    }
+
+    private String matchingLocation(String requested) {
+        for (String location : adjacencyList.keySet()) {
+            if (location.equalsIgnoreCase(requested)) return location;
+        }
+        return null;
     }
 
     public boolean isEmpty() {
